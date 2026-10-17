@@ -1,11 +1,12 @@
 ## Interface: 16001
 ## Title: SwiftQuest
-## Notes: Accepts quests and hands them in as soon as you talk to the quest giver. Type /swiftquest.
+## Notes: Accepts quests and hands them in as soon as you talk to the quest giver, and can read them aloud. Type /swiftquest.
 ## Author: bizzal70
-## Version: 0.1.0
+## Version: 0.2.0
 ## SavedVariables: SwiftQuestDB
 ## IconTexture: Interface\Icons\INV_Misc_Book_08
 ## AddonCompartmentFunc: SwiftQuest_OnAddonCompartmentClick
 
 Core.lua
+Narrator.lua
 Options.lua

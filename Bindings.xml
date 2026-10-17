@@ -1,0 +1,11 @@
+<Bindings>
+	<Binding name="SWIFTQUEST_STOP" header="SWIFTQUEST" category="ADDONS">
+		SlashCmdList.SWIFTQUEST("stop")
+	</Binding>
+	<Binding name="SWIFTQUEST_SKIP" category="ADDONS">
+		SlashCmdList.SWIFTQUEST("skip")
+	</Binding>
+	<Binding name="SWIFTQUEST_REPLAY" category="ADDONS">
+		SlashCmdList.SWIFTQUEST("replay")
+	</Binding>
+</Bindings>

@@ -1,6 +1,6 @@
 # SwiftQuest
 
-Accepts quests and hands them in as soon as you talk to the quest giver. An addon for World of Warcraft: Forever (client 1.60.x).
+Accepts quests and hands them in as soon as you talk to the quest giver, and can read them aloud so you still get the story. An addon for World of Warcraft: Forever (client 1.60.x).
 
 ## What it does
 
@@ -10,6 +10,20 @@ Talk to a quest giver and SwiftQuest does the clicking:
 - **hands in** the quests you have finished, straight through to the reward.
 
 Hold **Shift** while talking to someone to do it all by hand that time, for instance when you want to read the quest.
+
+## Reading quests aloud
+
+Turn on **Read quests aloud** in the options (or `/swiftquest narrate`) and SwiftQuest reads each quest to you with the game's text to speech: the title, the story and the objectives when you pick it up, and what the quest giver says when you hand it in. The quest is still accepted at once, and the reading carries on after the window closes, so you can walk off and listen.
+
+- **A voice to suit the quest giver:** a female voice for female quest givers, a male one for everyone else. Choose each voice, the speed and the volume in the options, and try them with **Hear the voices**.
+- **Listen first:** if you would rather hear the story before taking the quest, turn on **Wait for the reading before accepting**. Accepting and handing in then wait until the reading ends; Stop lets them go ahead.
+- **What the quest giver says first:** their greeting is read before the quest. This can be turned off.
+- **Grey and repeatable quests** are not read while SwiftQuest is leaving them to you.
+- **Skip and Stop:** a small bar shows what is being read, with Skip and Stop. Drag it where you like. There are key bindings for Stop, Skip and Replay under Key Bindings, AddOns.
+- **Hear a quest again:** `/swiftquest replay` reads the last one again; the **Listen** button in the quest log, or `/swiftquest read`, reads the quest selected there; `/swiftquest read wolves` reads the quest in your log with "wolves" in its name.
+- **Forever TTS:** if you already use the Forever TTS addon, SwiftQuest leaves the reading to it, so two voices never talk over each other.
+
+The voices are the ones installed in Windows. If you hear nothing, check **Options, Accessibility, Text to Speech** in the game and the speech voices in Windows settings. Stopping the reading also stops any other text to speech the game is doing at that moment, such as reading chat aloud.
 
 ## What it will not do
 
@@ -27,6 +41,10 @@ Type `/swiftquest` to open the options, or use the addon's entry in the minimap'
 | Hand in finished quests | `/swiftquest turnin` |
 | Leave low-level (grey) quests to me | `/swiftquest lowlevel` |
 | Leave repeatable quests to me | `/swiftquest repeatable` |
+| Read quests aloud | `/swiftquest narrate` |
+| Wait for the reading before accepting | `/swiftquest listen` |
+| Stop, skip ahead, read the last quest again | `/swiftquest stop`, `skip`, `replay` |
+| Read a quest from your log | `/swiftquest read [part of its name]` |
 
 ## More from this author
 

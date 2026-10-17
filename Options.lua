@@ -8,6 +8,19 @@ local ACCENT_R, ACCENT_G, ACCENT_B = 0.85, 0.63, 0.40
 local window
 local controls = {}
 
+-- The steps the speed and volume buttons go through.
+local SPEEDS = { -4, -2, 0, 2, 4 }
+local SPEED_NAMES = { [-4] = "Slower", [-2] = "Slow", [0] = "Normal", [2] = "Fast", [4] = "Faster" }
+local VOLUMES = { 25, 50, 75, 100 }
+
+-- The value after this one in a list, going round.
+local function Next(list, value)
+    for index, item in ipairs(list) do
+        if item == value then return list[index % #list + 1] end
+    end
+    return list[1]
+end
+
 local function Fill(frame, r, g, b, a)
     local texture = frame:CreateTexture(nil, "BACKGROUND")
     texture:SetAllPoints()
@@ -74,7 +87,7 @@ end
 
 local function CreateWindow()
     window = CreateFrame("Frame", addonName .. "Options", UIParent)
-    window:SetSize(328, 204)
+    window:SetSize(328, 496)
     window:SetPoint("CENTER")
     window:SetFrameStrata("HIGH")
     window:SetToplevel(true)
@@ -121,6 +134,50 @@ local function CreateWindow()
         function() return "Leave repeatable quests to me" end,
         function() return ns.db.skipRepeatable end,
         function() ns.db.skipRepeatable = not ns.db.skipRepeatable end)
+
+    -- Reading aloud.
+    local heading = window:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    heading:SetPoint("TOPLEFT", 16, -180)
+    heading:SetText("Reading quests aloud")
+    CreateRow(window, -200, true,
+        function() return "Read quests aloud" end,
+        function() return ns.db.narrate end,
+        function()
+            ns.db.narrate = not ns.db.narrate
+            if not ns.db.narrate then ns.StopNarration() end
+        end)
+    CreateRow(window, -228, true,
+        function() return "Wait for the reading before accepting" end,
+        function() return ns.db.listenFirst end,
+        function() ns.db.listenFirst = not ns.db.listenFirst end)
+    CreateRow(window, -256, true,
+        function() return "Read what the quest giver says first" end,
+        function() return ns.db.readGreetings end,
+        function() ns.db.readGreetings = not ns.db.readGreetings end)
+    CreateRow(window, -284, true,
+        function() return "Match the voice to the quest giver" end,
+        function() return ns.db.matchVoice end,
+        function() ns.db.matchVoice = not ns.db.matchVoice end)
+    CreateRow(window, -318, false,
+        function() return "Voice: " .. (ns.VoiceName(ns.VoiceFor("male")) or "none found") end,
+        function() return false end,
+        function() ns.NextVoice("male") end)
+    CreateRow(window, -346, false,
+        function() return "Female voice: " .. (ns.VoiceName(ns.VoiceFor("female")) or "none found") end,
+        function() return false end,
+        function() ns.NextVoice("female") end)
+    CreateRow(window, -374, false,
+        function() return "Speed: " .. (SPEED_NAMES[ns.db.rate] or ns.db.rate) end,
+        function() return false end,
+        function() ns.db.rate = Next(SPEEDS, ns.db.rate) end)
+    CreateRow(window, -402, false,
+        function() return ("Volume: %d%%"):format(ns.db.volume) end,
+        function() return false end,
+        function() ns.db.volume = Next(VOLUMES, ns.db.volume) end)
+    CreateRow(window, -436, false,
+        function() return "Hear the voices" end,
+        function() return false end,
+        function() ns.TestVoices() end)
 
     local hint = window:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
     hint:SetPoint("BOTTOMLEFT", 16, 12)
