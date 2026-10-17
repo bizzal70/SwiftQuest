@@ -15,6 +15,8 @@ Hold **Shift** while talking to someone to do it all by hand that time, for inst
 
 Turn on **Read quests aloud** in the options (or `/swiftquest narrate`) and SwiftQuest reads each quest to you with the game's text to speech: the title, the story and the objectives when you pick it up, and what the quest giver says when you hand it in. The quest is still accepted at once, and the reading carries on after the window closes, so you can walk off and listen.
 
+It is off until you turn it on, and is turned on for each character separately, so new characters start without it. Voices, speed and volume are shared by all your characters.
+
 - **A voice to suit the quest giver:** a female voice for female quest givers, a male one for everyone else. Choose each voice, the speed and the volume in the options, and try them with **Hear the voices**.
 - **Listen first:** if you would rather hear the story before taking the quest, turn on **Wait for the reading before accepting**. Accepting and handing in then wait until the reading ends; Stop lets them go ahead.
 - **What the quest giver says first:** their greeting is read before the quest. This can be turned off.

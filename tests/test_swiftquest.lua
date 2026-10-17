@@ -196,6 +196,8 @@ SPOKEN = {}
 check(on("QUEST_DETAIL") == "accept" and #SPOKEN == 0, "with reading aloud off, nothing is said")
 SlashCmdList.SWIFTQUEST("narrate")
 check(ns.db.narrate and PRINTED[#PRINTED]:find("Quests are read aloud", 1, true), "/swiftquest narrate turns reading aloud on")
+check(SwiftQuestCharDB.narrate == true and SwiftQuestDB.narrate == nil, "and it is kept for this character only, not the whole account")
+check(SwiftQuestDB.rate ~= nil and SwiftQuestCharDB.rate == nil, "while how it sounds is shared across the account")
 
 SPOKEN = {}
 check(on("QUEST_DETAIL") == "accept", "the quest is still accepted at once")

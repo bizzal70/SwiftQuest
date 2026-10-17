@@ -18,10 +18,8 @@ local defaults = {
     -- Repeatable quests usually take items each time, so are left alone.
     skipRepeatable = true,
 
-    -- Reading quests aloud. Off until the player turns it on.
-    narrate = false,
-    -- Hold the automatic accept and hand-in until the reading has finished.
-    listenFirst = false,
+    -- Reading quests aloud. Whether it is on is kept per character (see
+    -- CHARACTER_DEFAULTS); how it sounds is shared across the account.
     -- Read what the quest giver says before the quest, too.
     readGreetings = true,
     -- A female voice for female quest givers, a male one otherwise.
@@ -31,6 +29,15 @@ local defaults = {
     rate = 0,                   -- -10 (slowest) to 10 (fastest)
     volume = 100,               -- 0 to 100
     showBar = true,             -- the bar with Skip and Stop while reading
+}
+
+-- Kept for each character separately, so a new character starts with
+-- reading aloud off whatever another character has chosen.
+local CHARACTER_DEFAULTS = {
+    -- Reading quests aloud. Off until the player turns it on.
+    narrate = false,
+    -- Hold the automatic accept and hand-in until the reading has finished.
+    listenFirst = false,
 }
 
 -- Set if the game's quest functions turn out to behave differently here;
@@ -234,7 +241,31 @@ frame:SetScript("OnEvent", function(self, event, loaded)
                 SwiftQuestDB[key] = value
             end
         end
-        ns.db = SwiftQuestDB
+        SwiftQuestCharDB = SwiftQuestCharDB or {}
+        for key, value in pairs(CHARACTER_DEFAULTS) do
+            -- Version 0.2.3 and before kept these for the whole account;
+            -- that setting is dropped rather than copied, so every
+            -- character starts with reading aloud off.
+            SwiftQuestDB[key] = nil
+            if SwiftQuestCharDB[key] == nil then
+                SwiftQuestCharDB[key] = value
+            end
+        end
+        -- One table to read and write settings through: the per-character
+        -- ones go to this character's table, the rest to the account's.
+        ns.db = setmetatable({}, {
+            __index = function(_, key)
+                if CHARACTER_DEFAULTS[key] ~= nil then return SwiftQuestCharDB[key] end
+                return SwiftQuestDB[key]
+            end,
+            __newindex = function(_, key, value)
+                if CHARACTER_DEFAULTS[key] ~= nil then
+                    SwiftQuestCharDB[key] = value
+                else
+                    SwiftQuestDB[key] = value
+                end
+            end,
+        })
         self:UnregisterEvent("ADDON_LOADED")
         -- Registering an event this client does not have throws.
         for name in pairs(handlers) do

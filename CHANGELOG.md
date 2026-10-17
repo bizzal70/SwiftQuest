@@ -1,5 +1,9 @@
 # SwiftQuest
 
+## 0.2.4
+
+- "Read quests aloud" and "Wait for the reading before accepting" are now kept for each character, so a new character starts with them off. They were shared across the account, so turning reading on for one character turned it on for all. After updating, turn reading on again on each character you want it for. Voices, speed and volume are still shared.
+
 ## 0.2.3
 
 - Fixed the real cause of quests being accepted before the reading ended: a safety timer left over from one sentence could cut the next one short. Each timer now belongs to its own piece of speech.
