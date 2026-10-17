@@ -330,9 +330,37 @@ check(not SwiftQuestNarration.__shown, "and goes when it ends")
 SPOKEN = {}; AFTERS = {}
 on("QUEST_DETAIL")
 local count = #SPOKEN
-NOW = NOW + 60
-for _, fn in ipairs(AFTERS) do fn() end
-check(#SPOKEN == count + 1, "a piece the game never reports finished is moved past after a while")
+-- The fake timers ignore their delays, so they are run one at a time:
+-- first the check made a few seconds in, which sets the clock going.
+local startCheck = AFTERS[1]; AFTERS = {}
+NOW = NOW + 5
+startCheck()
+check(#SPOKEN == count and #AFTERS == 1, "with no start reported after a few seconds, a clock is set for the piece's expected time")
+NOW = NOW + 20
+AFTERS[1]()
+check(#SPOKEN == count + 1, "and when it runs out the reading moves on")
+finishAll()
+
+-- a timer from an earlier piece must not cut the next one short
+SPOKEN = {}; AFTERS = {}
+on("QUEST_DETAIL")
+Fire("VOICE_CHAT_TTS_PLAYBACK_STARTED", 41)
+local earlier = AFTERS; AFTERS = {}
+NOW = NOW + 15; Fire("VOICE_CHAT_TTS_PLAYBACK_FINISHED", 41)
+Fire("VOICE_CHAT_TTS_PLAYBACK_STARTED", 42)
+count = #SPOKEN
+NOW = NOW + 2
+for _, fn in ipairs(earlier) do fn() end
+check(#SPOKEN == count and ns.IsSpeaking(), "the first piece's timers do nothing while the second is being spoken")
+NOW = NOW + 2; Fire("VOICE_CHAT_TTS_PLAYBACK_FINISHED", 42)
+check(#SPOKEN == count + 1, "and the second moves on when its own end is reported")
+-- slow speech: no early cut-off even well past the expected time
+Fire("VOICE_CHAT_TTS_PLAYBACK_STARTED", 43)
+AFTERS = {}
+NOW = NOW + 25
+check(#SPOKEN == count + 1, "a slow piece is waited for while the game still has not reported its end")
+Fire("VOICE_CHAT_TTS_PLAYBACK_FINISHED", 43)
+finishAll()
 finishAll()
 
 -- the game without text to speech

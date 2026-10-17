@@ -1,5 +1,10 @@
 # SwiftQuest
 
+## 0.2.3
+
+- Fixed the real cause of quests being accepted before the reading ended: a safety timer left over from one sentence could cut the next one short. Each timer now belongs to its own piece of speech.
+- The game's reports of when speech starts and ends turned out to be accurate, so they now drive the reading; the clock is only used if the game reports nothing, and slow speech is waited for.
+
 ## 0.2.2
 
 - Fixed: with "Wait for the reading before accepting" on, quests were accepted while still being read. The game can report a piece of speech as finished when it has only passed it to Windows; such early reports are no longer believed, and only reports about SwiftQuest's own speech count.

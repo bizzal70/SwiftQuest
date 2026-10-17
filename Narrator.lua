@@ -9,12 +9,17 @@ local addonName, ns = ...
 
 local CHUNK_LENGTH = 220        -- characters per piece, ending at a sentence
 local SECONDS_PER_CHARACTER = 0.075
-local GRACE_SECONDS = 1.5       -- extra time before a silent piece is given up on
--- A report that a piece has finished, arriving before it can have been
--- spoken, is not believed: the game may report a piece as done when it
--- has only handed it on to Windows. Below this share of the expected
--- time, the addon waits for its own timer instead.
-local MIN_SHARE = 0.6
+-- The game reports when each piece starts and finishes (seen in game on
+-- 2026-10-17), and those reports are what move the reading on. The clock
+-- is only a fallback: if no start is reported within START_WAIT seconds
+-- the game is not reporting, so the piece is taken as done after its
+-- expected time plus GRACE_SECONDS; if it started but its end never comes,
+-- it is given up on after a generous STUCK_FACTOR times its expected time.
+-- Speech runs slower than expected at times (0.13 s a character seen).
+local START_WAIT = 5
+local GRACE_SECONDS = 1.5
+local STUCK_FACTOR = 3
+local STUCK_EXTRA = 20
 
 -- Male and female Windows voices, to guess which installed voice is which.
 local MALE_NAMES = { "david", "mark", "george", "james", "richard", "guy", "ryan", "sean", "ravi", "paul", "daniel" }
@@ -25,6 +30,8 @@ local speaking = false
 local speakingSince = 0
 local expected = 0              -- seconds the piece being spoken should take
 local utterance                 -- the game's number for it, once it says
+local cutShort                  -- the number of a piece just stopped, whose end report is old news
+local pieceNumber = 0           -- counts pieces, so a timer only acts for its own
 local debugEvents = false       -- /swiftquest ttsdebug
 local generation = 0            -- bumped on every stop, so stale timers do nothing
 local pending                   -- an automatic step waiting for the reading to end
@@ -190,6 +197,8 @@ function SpeakNext()
     speaking = true
     speakingSince = GetTime()
     utterance = nil
+    pieceNumber = pieceNumber + 1
+    local mine = pieceNumber
     expected = #piece.text * SECONDS_PER_CHARACTER * (1 - ns.db.rate / 20)
     if debugEvents then
         ns.Print(("speaking %d characters, expected %.1f s"):format(#piece.text, expected))
@@ -203,15 +212,25 @@ function SpeakNext()
         return
     end
     ns.UpdateBar()
-    -- If the game never says the piece has finished, carry on anyway once
-    -- it has surely had time.
-    local mine = generation
-    C_Timer.After(expected + GRACE_SECONDS, function()
-        if mine == generation and speaking and GetTime() - speakingSince >= 1 then
-            if debugEvents then ns.Print("no believable end reported; moving on by the clock") end
+    -- The fallbacks. Each checks that its own piece is still the one being
+    -- spoken, so a timer left over from an earlier piece does nothing.
+    local function MoveOn(why)
+        if mine == pieceNumber and speaking then
+            if debugEvents then ns.Print(why) end
             speaking = false
             SpeakNext()
         end
+    end
+    C_Timer.After(START_WAIT, function()
+        if mine == pieceNumber and speaking and utterance == nil then
+            -- No start reported: go by the clock for this piece.
+            C_Timer.After(math.max(0, expected + GRACE_SECONDS - START_WAIT), function()
+                MoveOn("the game did not report this piece; moving on by the clock")
+            end)
+        end
+    end)
+    C_Timer.After(expected * STUCK_FACTOR + STUCK_EXTRA, function()
+        MoveOn("the end of this piece was never reported; moving on")
     end)
 end
 
@@ -234,6 +253,7 @@ function ns.StopNarration()
     queue = {}
     if speaking then
         speaking = false
+        cutShort = utterance
         pcall(C_VoiceChat.StopSpeakingText)
     end
     ns.UpdateBar()
@@ -247,6 +267,7 @@ function ns.SkipNarration()
     if not speaking then return end
     generation = generation + 1
     speaking = false
+    cutShort = utterance
     pcall(C_VoiceChat.StopSpeakingText)
     -- The game reports the cut-short piece as finished; that report is
     -- ignored because speaking is already false.
@@ -293,6 +314,7 @@ local function StartConversation()
             pending = nil
             if speaking then
                 speaking = false
+                cutShort = utterance
                 pcall(C_VoiceChat.StopSpeakingText)
             end
         end
@@ -602,12 +624,13 @@ frame:SetScript("OnEvent", function(_, event, ...)
         if not speaking then return end
         local id = ...
         local elapsed = GetTime() - speakingSince
-        -- Reports in the first moment belong to a piece just cut short.
-        if elapsed < 0.2 then return end
+        -- The end of a piece just cut short is old news.
+        if Usable(id) and id == cutShort then return end
+        -- Before the start of ours is reported, an end can only be another's,
+        -- unless it comes so late that the start report was simply missed.
+        if utterance == nil and elapsed < START_WAIT then return end
         -- A report about some other piece of speech is not ours.
         if utterance ~= nil and Usable(id) and id ~= utterance then return end
-        -- Too soon to be true: the timer will move on when it is due.
-        if event == "VOICE_CHAT_TTS_PLAYBACK_FINISHED" and elapsed < expected * MIN_SHARE then return end
         speaking = false
         SpeakNext()
     end
