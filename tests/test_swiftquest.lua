@@ -188,7 +188,7 @@ check(#ns.SplitText("No full stop at the end") == 1 and ns.SplitText("One. Two")
 
 -- Plays out the reading: reports each piece finished, a moment apart.
 local function finishAll()
-    for _ = 1, 20 do NOW = NOW + 5; Fire("VOICE_CHAT_TTS_PLAYBACK_FINISHED") end
+    for _ = 1, 20 do NOW = NOW + 30; Fire("VOICE_CHAT_TTS_PLAYBACK_FINISHED") end
 end
 local function said() local t = {} for _, x in ipairs(SPOKEN) do t[#t + 1] = x.text end return table.concat(t, " ") end
 
@@ -242,9 +242,41 @@ check(STOPS == 1 and #SPOKEN == 2 and SPOKEN[2].text == "Got those pelts?", "tal
 SlashCmdList.SWIFTQUEST("listen")
 SPOKEN = {}
 check(on("QUEST_DETAIL") == "", "in listen-first mode the quest is not accepted while it is read")
+-- The game reports the piece finished almost at once, as it may when it
+-- has only handed the text to Windows: that is not believed.
+NOW = NOW + 1; Fire("VOICE_CHAT_TTS_PLAYBACK_FINISHED")
+check(#PRESSED == 0 and ns.IsSpeaking(), "a report of the end that comes too soon to be true is not believed, so nothing is accepted yet")
 PRESSED = {}
 finishAll()
 check(table.concat(PRESSED, ", ") == "accept", "and is accepted when the reading ends")
+
+-- reports about other speech are not taken as ours
+SPOKEN = {}; PRESSED = {}
+on("QUEST_DETAIL")
+Fire("VOICE_CHAT_TTS_PLAYBACK_STARTED", 7)
+NOW = NOW + 30; Fire("VOICE_CHAT_TTS_PLAYBACK_FINISHED", 99)
+check(#PRESSED == 0 and ns.IsSpeaking(), "a report about some other speech does not end ours")
+Fire("VOICE_CHAT_TTS_PLAYBACK_FINISHED", 7)
+check(table.concat(PRESSED, ", ") == "accept", "the report about ours does")
+
+-- if the game never reports a believable end, the clock moves things on
+SPOKEN = {}; PRESSED = {}; AFTERS = {}
+on("QUEST_DETAIL")
+NOW = NOW + 60
+for _, fn in ipairs(AFTERS) do fn() end
+check(table.concat(PRESSED, ", ") == "accept", "with no believable report at all, the accept still comes once the reading must be over")
+
+-- in listen-first mode, choosing a quest from a conversation waits too
+SPOKEN = {}; PRESSED = {}
+NPC = { guid = "Creature-5", name = "Dellylah", sex = 3 }
+GOSSIP_AVAILABLE = { { questID = 30 } }
+check(on("GOSSIP_SHOW") == "", "the greeting is heard before a quest is chosen from the conversation")
+finishAll()
+check(table.concat(PRESSED, ", ") == "gossip open 30", "and the quest is opened when it ends")
+on("GOSSIP_SHOW"); PRESSED = {}
+Fire("GOSSIP_CLOSED"); finishAll()
+check(#PRESSED == 0, "walking away from the conversation meanwhile leaves it alone")
+GOSSIP_AVAILABLE = {}
 on("QUEST_DETAIL"); PRESSED = {}
 Fire("QUEST_FINISHED"); finishAll()
 check(#PRESSED == 0, "closing the quest window meanwhile leaves the quest alone")
@@ -252,6 +284,16 @@ on("QUEST_DETAIL"); PRESSED = {}
 SlashCmdList.SWIFTQUEST("stop")
 check(table.concat(PRESSED, ", ") == "accept" and not ns.IsSpeaking(), "/swiftquest stop silences it and lets the accept go ahead")
 SlashCmdList.SWIFTQUEST("listen")
+
+-- /swiftquest ttsdebug shows the game's speech reports
+SlashCmdList.SWIFTQUEST("ttsdebug")
+SPOKEN = {}
+on("QUEST_DETAIL")
+local printedBefore = #PRINTED
+Fire("VOICE_CHAT_TTS_PLAYBACK_STARTED", 3)
+check(#PRINTED == printedBefore + 1 and PRINTED[#PRINTED]:find("PLAYBACK_STARTED (3) at", 1, true), "/swiftquest ttsdebug prints the game's speech reports: " .. PRINTED[#PRINTED])
+finishAll()
+SlashCmdList.SWIFTQUEST("ttsdebug")
 
 -- skip, replay and the quest log
 SPOKEN = {}

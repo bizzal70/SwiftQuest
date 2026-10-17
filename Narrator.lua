@@ -9,7 +9,12 @@ local addonName, ns = ...
 
 local CHUNK_LENGTH = 220        -- characters per piece, ending at a sentence
 local SECONDS_PER_CHARACTER = 0.075
-local GRACE_SECONDS = 4         -- extra time before a silent piece is given up on
+local GRACE_SECONDS = 1.5       -- extra time before a silent piece is given up on
+-- A report that a piece has finished, arriving before it can have been
+-- spoken, is not believed: the game may report a piece as done when it
+-- has only handed it on to Windows. Below this share of the expected
+-- time, the addon waits for its own timer instead.
+local MIN_SHARE = 0.6
 
 -- Male and female Windows voices, to guess which installed voice is which.
 local MALE_NAMES = { "david", "mark", "george", "james", "richard", "guy", "ryan", "sean", "ravi", "paul", "daniel" }
@@ -18,6 +23,9 @@ local FEMALE_NAMES = { "zira", "hazel", "susan", "heera", "linda", "catherine", 
 local queue = {}                -- pieces still to say: { text =, voice = }
 local speaking = false
 local speakingSince = 0
+local expected = 0              -- seconds the piece being spoken should take
+local utterance                 -- the game's number for it, once it says
+local debugEvents = false       -- /swiftquest ttsdebug
 local generation = 0            -- bumped on every stop, so stale timers do nothing
 local pending                   -- an automatic step waiting for the reading to end
 local lastNarration             -- the last thing read in full, for /swiftquest replay
@@ -181,6 +189,11 @@ function SpeakNext()
     if not piece then Finished(); return end
     speaking = true
     speakingSince = GetTime()
+    utterance = nil
+    expected = #piece.text * SECONDS_PER_CHARACTER * (1 - ns.db.rate / 20)
+    if debugEvents then
+        ns.Print(("speaking %d characters, expected %.1f s"):format(#piece.text, expected))
+    end
     local ok = pcall(C_VoiceChat.SpeakText, piece.voice, piece.text, ns.db.rate, ns.db.volume, false)
     if not ok then
         -- Nothing will come back from the game, so move straight on.
@@ -193,8 +206,9 @@ function SpeakNext()
     -- If the game never says the piece has finished, carry on anyway once
     -- it has surely had time.
     local mine = generation
-    C_Timer.After(#piece.text * SECONDS_PER_CHARACTER * (1 - ns.db.rate / 20) + GRACE_SECONDS, function()
+    C_Timer.After(expected + GRACE_SECONDS, function()
         if mine == generation and speaking and GetTime() - speakingSince >= 1 then
+            if debugEvents then ns.Print("no believable end reported; moving on by the clock") end
             speaking = false
             SpeakNext()
         end
@@ -237,6 +251,13 @@ function ns.SkipNarration()
     -- The game reports the cut-short piece as finished; that report is
     -- ignored because speaking is already false.
     SpeakNext()
+end
+
+-- Prints the game's speech reports as they arrive, to see what this
+-- client sends and when.
+function ns.ToggleTtsDebug()
+    debugEvents = not debugEvents
+    ns.Print("Speech reports " .. (debugEvents and "will be shown in chat." or "are no longer shown."))
 end
 
 -- Runs an automatic step now, or, in "listen first" mode, once the reading
@@ -553,23 +574,40 @@ end
 
 local frame = CreateFrame("Frame")
 frame:RegisterEvent("PLAYER_LOGIN")
-for _, event in ipairs({ "VOICE_CHAT_TTS_PLAYBACK_FINISHED", "VOICE_CHAT_TTS_PLAYBACK_FAILED", "QUEST_FINISHED" }) do
+for _, event in ipairs({ "VOICE_CHAT_TTS_PLAYBACK_STARTED", "VOICE_CHAT_TTS_PLAYBACK_FINISHED", "VOICE_CHAT_TTS_PLAYBACK_FAILED",
+        "VOICE_CHAT_TTS_SPEAK_TEXT_UPDATE", "QUEST_FINISHED", "GOSSIP_CLOSED" }) do
     pcall(frame.RegisterEvent, frame, event)
 end
-frame:SetScript("OnEvent", function(_, event)
+frame:SetScript("OnEvent", function(_, event, ...)
     if not ns.db then return end
+    if debugEvents and event:find("^VOICE_CHAT") then
+        local args = {}
+        for index = 1, select("#", ...) do args[#args + 1] = tostring((select(index, ...))) end
+        ns.Print(("%s (%s) at %.1f s"):format(event:gsub("VOICE_CHAT_TTS_", ""), table.concat(args, ", "), GetTime() - speakingSince))
+    end
     if event == "PLAYER_LOGIN" then
         otherReader = FindOtherReader()
         pcall(AddListenButton)
         if otherReader and ns.db.narrate then
             ns.Print(otherReader .. " is installed, so SwiftQuest leaves reading quests aloud to it.")
         end
-    elseif event == "QUEST_FINISHED" then
-        -- The quest window has closed, so there is nothing left to press.
+    elseif event == "QUEST_FINISHED" or event == "GOSSIP_CLOSED" then
+        -- The window has closed, so there is nothing left to press.
         pending = nil
-    elseif speaking and GetTime() - speakingSince >= 0.2 then
-        -- A piece has finished (or failed): on to the next. Reports that
-        -- arrive in the first moment belong to a piece cut short.
+    elseif event == "VOICE_CHAT_TTS_PLAYBACK_STARTED" then
+        -- The first piece to start after sending is ours; remember its number.
+        local id = ...
+        if speaking and utterance == nil and Usable(id) then utterance = id end
+    elseif event == "VOICE_CHAT_TTS_PLAYBACK_FINISHED" or event == "VOICE_CHAT_TTS_PLAYBACK_FAILED" then
+        if not speaking then return end
+        local id = ...
+        local elapsed = GetTime() - speakingSince
+        -- Reports in the first moment belong to a piece just cut short.
+        if elapsed < 0.2 then return end
+        -- A report about some other piece of speech is not ours.
+        if utterance ~= nil and Usable(id) and id ~= utterance then return end
+        -- Too soon to be true: the timer will move on when it is due.
+        if event == "VOICE_CHAT_TTS_PLAYBACK_FINISHED" and elapsed < expected * MIN_SHARE then return end
         speaking = false
         SpeakNext()
     end

@@ -70,7 +70,7 @@ function handlers.GOSSIP_SHOW()
     if ns.db.turnIn then
         for _, quest in ipairs(C_GossipInfo.GetActiveQuests() or {}) do
             if Usable(quest.isComplete) and quest.isComplete and Usable(quest.questID) then
-                C_GossipInfo.SelectActiveQuest(quest.questID)
+                ns.AfterNarration(function() C_GossipInfo.SelectActiveQuest(quest.questID) end)
                 return
             end
         end
@@ -78,7 +78,7 @@ function handlers.GOSSIP_SHOW()
     if ns.db.accept then
         for _, quest in ipairs(C_GossipInfo.GetAvailableQuests() or {}) do
             if Usable(quest.questID) and Wanted(quest.isTrivial, quest.repeatable) then
-                C_GossipInfo.SelectAvailableQuest(quest.questID)
+                ns.AfterNarration(function() C_GossipInfo.SelectAvailableQuest(quest.questID) end)
                 return
             end
         end
@@ -92,7 +92,7 @@ function handlers.QUEST_GREETING()
         for index = 1, (Usable(count) and count or 0) do
             local _, isComplete = GetActiveTitle(index)
             if Usable(isComplete) and isComplete then
-                SelectActiveQuest(index)
+                ns.AfterNarration(function() SelectActiveQuest(index) end)
                 return
             end
         end
@@ -102,7 +102,7 @@ function handlers.QUEST_GREETING()
         for index = 1, (Usable(count) and count or 0) do
             local isTrivial, _, isRepeatable = GetAvailableQuestInfo(index)
             if Wanted(isTrivial, isRepeatable) then
-                SelectAvailableQuest(index)
+                ns.AfterNarration(function() SelectAvailableQuest(index) end)
                 return
             end
         end
@@ -177,6 +177,9 @@ SlashCmdList.SWIFTQUEST = function(msg)
     elseif command == "skip" then
         ns.SkipNarration()
         return
+    elseif command == "ttsdebug" then
+        ns.ToggleTtsDebug()
+        return
     elseif command == "replay" then
         ns.Replay()
         return
@@ -201,6 +204,7 @@ SlashCmdList.SWIFTQUEST = function(msg)
         ns.Print("/swiftquest listen - wait for the reading before accepting or handing in, on or off")
         ns.Print("/swiftquest stop, skip, replay - control the reading")
         ns.Print("/swiftquest read [part of a name] - read a quest from your quest log")
+        ns.Print("/swiftquest ttsdebug - show the game's speech reports in chat, for tracking down a problem")
         ns.Print("Hold Shift while talking to someone to do it all by hand that time.")
         return
     end
