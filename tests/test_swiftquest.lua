@@ -166,7 +166,9 @@ rows[9].__scripts.OnClick(rows[9]); check(ns.db.maleVoice == 2, "the voice butto
 ns.db.maleVoice = nil
 SPOKEN = {}
 rows[13].__scripts.OnClick(rows[13])
-check(#SPOKEN == 1 and SPOKEN[1].voice == 1 and SPOKEN[1].text:find("Microsoft David", 1, true), "Hear the voices says a sentence in the male voice")
+check(#SPOKEN == 1 and SPOKEN[1].voice == 1 and SPOKEN[1].text == "Quest givers will sound like this. I am David.", "Hear the voices says a sentence in the male voice: " .. SPOKEN[1].text)
+check(ns.ShortVoiceName("Microsoft Zira Desktop - English (United States)") == "Zira" and ns.ShortVoiceName("Microsoft Aria Online (Natural) - English (United States)") == "Aria" and ns.ShortVoiceName("Hazel") == "Hazel", "voice names are shortened to fit the options")
+check(rows[9].Refresh and (function() rows[9].Refresh(); return true end)(), "the voice button can show its name")
 Fire("VOICE_CHAT_TTS_PLAYBACK_FINISHED")
 NOW = NOW + 5; Fire("VOICE_CHAT_TTS_PLAYBACK_FINISHED")
 check(#SPOKEN == 2 and SPOKEN[2].voice == 2, "and then one in the female voice, once the first has finished")

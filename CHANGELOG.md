@@ -1,5 +1,9 @@
 # SwiftQuest
 
+## 0.2.1
+
+- Voice names are shortened ("David" rather than "Microsoft David Desktop - English (United States)") so they fit in the options window.
+
 ## 0.2.0
 
 - Reads quests aloud with the game's text to speech (off until you turn it on): the story and objectives when you pick a quest up, and what the quest giver says when you hand it in. The quest is still accepted at once and the reading carries on.

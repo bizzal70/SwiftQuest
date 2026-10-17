@@ -90,9 +90,17 @@ local function Voices()
 end
 ns.Voices = Voices
 
+-- "Microsoft David Desktop - English (United States)" -> "David": the
+-- full names are too long for the options window, and for saying aloud.
+function ns.ShortVoiceName(name)
+    if type(name) ~= "string" then return name end
+    local short = name:gsub("^Microsoft ", ""):gsub("%s*%-%s.*$", ""):gsub(" Desktop$", ""):gsub(" Online.*$", "")
+    return short ~= "" and short or name
+end
+
 local function NameOf(voiceID)
     for _, voice in ipairs(Voices()) do
-        if voice.voiceID == voiceID then return voice.name end
+        if voice.voiceID == voiceID then return ns.ShortVoiceName(voice.name) end
     end
 end
 ns.VoiceName = NameOf
