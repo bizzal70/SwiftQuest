@@ -1,5 +1,9 @@
 # SwiftQuest
 
+## 0.3.0
+
+- Reading quests aloud has been removed, with everything that came with it: the voices, the reading bar, the key bindings, the Listen button and the reading commands. SwiftQuest is back to accepting and handing in quests, and its saved reading settings are cleared away.
+
 ## 0.2.4
 
 - "Read quests aloud" and "Wait for the reading before accepting" are now kept for each character, so a new character starts with them off. They were shared across the account, so turning reading on for one character turned it on for all. After updating, turn reading on again on each character you want it for. Voices, speed and volume are still shared.
