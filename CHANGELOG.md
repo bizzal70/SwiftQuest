@@ -1,5 +1,9 @@
 # SwiftQuest
 
+## 0.3.1
+
+- First release on CurseForge. No changes to how the addon works.
+
 ## 0.3.0
 
 - Reading quests aloud has been removed, with everything that came with it: the voices, the reading bar, the key bindings, the Listen button and the reading commands. SwiftQuest is back to accepting and handing in quests, and its saved reading settings are cleared away.
