@@ -38,6 +38,7 @@ Other small addons for World of Warcraft: Forever, all free:
 - **[VendorMate](https://github.com/bizzal70/VendorMate)** sells junk and repairs at vendors, and warns when your gear is wearing out.
 - **[AltBoard](https://github.com/bizzal70/AltBoard)** shows all your characters at a glance: level, gold, rested and where you left them.
 - **[SessionRecap](https://github.com/bizzal70/SessionRecap)** keeps a running tally of your play session: gold, experience per hour, quests, gathering and loot.
+- **[MacroKit](https://github.com/bizzal70/MacroKit)** adds ready-made macros for your class and spec (Paladin so far) and never overwrites your own.
 
 ## Installing
 
