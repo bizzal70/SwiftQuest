@@ -19,7 +19,7 @@ Hold **Shift** while talking to someone to do it all by hand that time, for inst
 
 ## Options
 
-Type `/swiftquest` to open the options, or use the addon's entry in the minimap's addon list.
+Type `/swiftquest` (or `/squest`) to open the options, or use the addon's entry in the minimap's addon list.
 
 | Setting | Command |
 |---|---|
