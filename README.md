@@ -28,6 +28,10 @@ Type `/swiftquest` (or `/squest`) to open the options, or use the addon's entry 
 | Leave low-level (grey) quests to me | `/swiftquest lowlevel` |
 | Leave repeatable quests to me | `/swiftquest repeatable` |
 
+## Controller
+
+With a game controller, the **B** button closes the SwiftQuest options, like the X and Escape do. While a window is open, B closes it; once it is closed, B goes back to whatever you have it set to. (In combat the game does not let addons change a button, so B goes back to normal when the fight ends.)
+
 ## More from this author
 
 Other small addons for World of Warcraft: Forever, all free:
