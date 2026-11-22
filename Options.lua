@@ -90,6 +90,7 @@ local function CreateWindow()
     -- Lets Escape close the window.
     tinsert(UISpecialFrames, addonName .. "Options")
 
+    ns.CloseWithPadB(_G[addonName .. "Options"], addonName .. "Options")
     local title = window:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     title:SetPoint("TOPLEFT", 14, -12)
     title:SetText("SwiftQuest")

@@ -1,5 +1,9 @@
 # SwiftQuest
 
+## 0.3.2
+
+- **Controller:** the B button now closes SwiftQuest's window, like the X and Escape. While one is open, B closes it; once it is closed, B does whatever you have it set to again.
+
 ## 0.3.1
 
 - First release on CurseForge. No changes to how the addon works.
