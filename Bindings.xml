@@ -1,0 +1,8 @@
+<Bindings>
+	<Binding name="SWIFTQUEST_PAUSE" header="SWIFTQUEST" category="ADDONS">
+		SwiftQuest_TogglePause()
+	</Binding>
+	<Binding name="SWIFTQUEST_OPTIONS" category="ADDONS">
+		SwiftQuest_ToggleOptions()
+	</Binding>
+</Bindings>

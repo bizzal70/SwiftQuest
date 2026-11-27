@@ -1,5 +1,13 @@
 # SwiftQuest
 
+## 0.4.0
+
+- **Fixed: low-level and repeatable quests were accepted** when a quest giver with just one quest opened it straight away (no list). The same checks now apply there.
+- **Leaves group, dungeon, raid and elite quests to you** (new, on by default), so your quest log doesn't fill with quests you won't do solo. Switch it off in the options or with `/swiftquest group`.
+- **Full bags at a turn-in:** if your bags have no room for the reward, SwiftQuest no longer tries (the game would only fail it). With JunkMate installed, JunkMate offers to make room; otherwise one chat line says how many slots you need.
+- **Pause key:** Key Bindings > AddOns > SwiftQuest > "Pause or resume SwiftQuest" (a controller button works; holding Shift is awkward on a controller), or `/swiftquest pause`. Also a key to open the options.
+- Listed in the game's own Options > AddOns. The options window remembers where you put it. A one-time line on first login says what SwiftQuest does. `/swiftquest debug` prints the version and settings for a bug report.
+
 ## 0.3.3
 
 - **Controller:** when a fight starts, B goes straight back to its usual job, even with a SwiftQuest window open (it used to stay on closing the window until the fight ended). It closes the window again once the fight is over.

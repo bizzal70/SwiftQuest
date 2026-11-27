@@ -104,7 +104,7 @@ local rows = {}
 for _, f in ipairs(Frames()) do
     if rawget(f, "Refresh") and f.__scripts.OnClick then rows[#rows + 1] = f end
 end
-check(#rows == 4, "the options have four switches")
+check(#rows == 5, "the options have five switches")
 for index, key in ipairs({ "accept", "turnIn", "skipTrivial", "skipRepeatable" }) do
     rows[index].__scripts.OnClick(rows[index])
     local off = not ns.db[key]
@@ -165,3 +165,72 @@ do
     check(bound[w] == "PAD2", "and borrowed again once the fight is over")
     w:Hide(); w.__scripts.OnHide(w)
 end
+
+-- 0.4.0: one-quest givers, group quests, full bags, pause.
+do
+    -- A fresh copy, as after a new login (an earlier test deliberately
+    -- made the first one stop itself for the session).
+    local ns = LoadAddon(ADDON_DIR, "SwiftQuest")
+    Fire("ADDON_LOADED", "SwiftQuest")
+    QUEST_ID = 77
+    QUEST_KIND = {}   -- questID -> { trivial, repeatable, tagName }
+    C_QuestLog = {
+        IsQuestTrivial = function(id) return QUEST_KIND[id] and QUEST_KIND[id].trivial or false end,
+        IsRepeatableQuest = function(id) return QUEST_KIND[id] and QUEST_KIND[id].repeatable or false end,
+        GetQuestTagInfo = function(id) local k = QUEST_KIND[id]; if k and k.tag then return { tagName = k.tag } end end,
+    }
+    GetQuestID = function() return QUEST_ID end
+    GROUP_SIZE = 0
+    GetSuggestedGroupNum = function() return GROUP_SIZE end
+    QuestGetAutoAccept = function() return false end
+    check(on("QUEST_DETAIL") == "accept", "(an ordinary quest is accepted)")
+    QUEST_KIND[77] = { trivial = true }
+    check(on("QUEST_DETAIL") == "", "a low-level quest opened straight away is now left to you")
+    QUEST_KIND[77] = { repeatable = true }
+    check(on("QUEST_DETAIL") == "", "so is a repeatable one")
+    QUEST_KIND[77] = { tag = "Elite" }
+    check(on("QUEST_DETAIL") == "", "and an elite one")
+    QUEST_KIND[77] = nil
+    GROUP_SIZE = 5
+    check(on("QUEST_DETAIL") == "", "and one suggesting a group")
+    SlashCmdList.SWIFTQUEST("group")
+    check(on("QUEST_DETAIL") == "accept", "/swiftquest group takes group quests again")
+    SlashCmdList.SWIFTQUEST("group")
+    GROUP_SIZE = 0
+    -- Full bags at a turn-in.
+    FREE = { [0] = 0, 0, 0, 0, 0 }
+    C_Container = C_Container or {}
+    C_Container.GetContainerNumFreeSlots = function(bag) return FREE[bag] or 0, 0 end
+    C_Container.GetContainerNumSlots = function() return 0 end
+    C_Container.GetContainerItemInfo = function() return nil end
+    GetNumQuestRewards = function() return 1 end
+    GetQuestItemInfo = function() return "Westfall Stew", "icon", 1 end
+    GetQuestItemLink = function() return "item:733" end
+    GetTitleText = function() return "Westfall Stew" end
+    GetNumQuestChoices = function() return 0 end
+    C_AddOns = C_AddOns or {}
+    C_AddOns.IsAddOnLoaded = function() return false end
+    local said = #PRINTED
+    check(on("QUEST_COMPLETE") == "", "with no room for the reward, it doesn't try to hand in")
+    check(PRINTED[#PRINTED]:find("No room in your bags for the reward from Westfall Stew (needs 1 free slot, you have 0)", 1, true),
+        "and says how much room is needed: " .. PRINTED[#PRINTED])
+    C_AddOns.IsAddOnLoaded = function(name) return name == "JunkMate" end
+    said = #PRINTED
+    check(on("QUEST_COMPLETE") == "" and #PRINTED == said, "with JunkMate installed it stays quiet (JunkMate offers to make room)")
+    FREE[0] = 1
+    check(on("QUEST_COMPLETE") == "take reward 1", "with room, it hands in")
+    -- Pause.
+    SlashCmdList.SWIFTQUEST("pause")
+    check(on("QUEST_DETAIL") == "" and on("QUEST_COMPLETE") == "", "paused, it leaves everything to you")
+    SwiftQuest_TogglePause()
+    check(on("QUEST_DETAIL") == "accept", "and the key binding resumes it")
+    -- Welcome once.
+    said = #PRINTED
+    Fire("PLAYER_LOGIN")
+    local again = #PRINTED
+    Fire("PLAYER_LOGIN")
+    check(#PRINTED == again, "the welcome line is said only once")
+    SlashCmdList.SWIFTQUEST("debug")
+    check(PRINTED[#PRINTED]:find("accept true", 1, true), "/swiftquest debug prints the settings")
+end
+

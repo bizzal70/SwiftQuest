@@ -14,6 +14,8 @@ Accepts quests and hands them in as soon as you talk to the quest giver. One add
 
 ## How it works
 
+- **0.4.0:** QUEST_DETAIL applies `Wanted(trivial, repeatable, group)` from `C_QuestLog.IsQuestTrivial / IsRepeatableQuest / GetQuestTagInfo(GetQuestID())` (tag name containing group/dungeon/raid/elite/pvp/heroic) or `GetSuggestedGroupNum() > 1`; all pcall'd, unknown = allowed. QUEST_COMPLETE checks `RoomForRewards` (free normal-bag slots vs rewards, counting stack room) and skips `GetQuestReward` when short (JunkMate's QUEST_COMPLETE offer takes over; without JunkMate one chat line). Pause: `ns.paused` (session), Bindings.xml SWIFTQUEST_PAUSE / SWIFTQUEST_OPTIONS. Settings canvas via `Settings.RegisterCanvasLayoutCategory` (pcall). One-time welcome (`db.welcomed`). Untested in game: the C_QuestLog calls on not-yet-accepted quests, and the Settings panel.
+
 - Five events drive it: `GOSSIP_SHOW` (`C_GossipInfo.GetActiveQuests` / `GetAvailableQuests`, then `SelectActiveQuest` / `SelectAvailableQuest` by quest ID), `QUEST_GREETING` (`GetNumActiveQuests`, `GetActiveTitle`, `GetAvailableQuestInfo`, selected by index), `QUEST_DETAIL` (`AcceptQuest`, or `AcknowledgeAutoAcceptQuest` when `QuestGetAutoAccept` is true), `QUEST_PROGRESS` (`CompleteQuest` if `IsQuestCompletable` and `GetQuestMoneyToGet` is 0) and `QUEST_COMPLETE` (`GetQuestReward(1)` only when `GetNumQuestChoices` is 0 or 1).
 - Finished quests are handed in before new ones are opened. One step is taken per event; the game's next event carries on from there.
 - Shift held skips everything. Every handler runs under `pcall`; on the first failure it prints one line and stops acting for the session, because it presses buttons on the player's behalf.
