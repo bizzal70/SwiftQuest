@@ -52,6 +52,7 @@ Other small addons for World of Warcraft: Forever, all free:
 - **[ZoomPad](https://www.curseforge.com/wow/addons/zoompad)** puts big + and - buttons on screen that zoom the camera, made for the Steam Deck touchscreen.
 - **[GamepadMacros](https://www.curseforge.com/wow/addons/gamepadmacros)** adds ready-made macros for controller and Steam Deck players: heal yourself, use a quest item, save and wear gear, leave a group, emotes.
 - **[FDR - Flight Data Recorder](https://www.curseforge.com/wow/addons/fdr-flight-data-recorder)** times every flight-master flight and counts your next one down to landing.
+- **[AuctionMate](https://www.curseforge.com/wow/addons/auctionmate)** prices what you sell at the auction house just under the lowest listing, and warns before you post far too low.
 
 ## Installing
 
